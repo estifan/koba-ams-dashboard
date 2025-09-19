@@ -144,7 +144,7 @@ export default function LoginPage() {
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                     Password
                   </label>
-                  <Link href="/forgot-password" className="text-xs font-medium text-[--color-secondary] hover:underline">
+                  <Link href="/forgot-password" className="text-xs font-medium text-emerald-600 hover:underline">
                     Forgot password?
                   </Link>
                 </div>
@@ -177,7 +177,7 @@ export default function LoginPage() {
                 </div>
               </div>
 
-              <div className="flex items-center">
+              {/* <div className="flex items-center">
                 <input
                   id="remember-me"
                   name="remember-me"
@@ -187,13 +187,13 @@ export default function LoginPage() {
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-gray-300">
                   Remember me
                 </label>
-              </div>
+              </div> */}
 
               <div>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-[--color-primary] hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--color-primary] transition duration-150 ease-in-out ${
+                  className={`w-full flex justify-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-emerald-600 hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[--color-primary] transition duration-150 ease-in-out ${
                     isLoading ? 'opacity-75 cursor-not-allowed' : ''
                   }`}
                 >

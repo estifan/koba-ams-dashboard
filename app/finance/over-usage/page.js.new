@@ -2,8 +2,7 @@
 
 import { gql } from "@apollo/client";
 import { useQuery } from "@apollo/client/react";
-import { Download, Settings2, ChevronDown } from "lucide-react";
-import { useState } from "react";
+import { Download, Settings2 } from "lucide-react";
 
 const OVER_USAGE_BY_GROUP = gql`
   query OverUsageByGroup($month: Month!, $year: Int!) {
@@ -14,11 +13,6 @@ const OVER_USAGE_BY_GROUP = gql`
     }
   }
 `;
-
-const months = [
-  'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
-  'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
-];
 
 const formatCurrency = (amount) => {
   return new Intl.NumberFormat('en-US', {
@@ -31,22 +25,15 @@ const formatCurrency = (amount) => {
 
 export default function OverUsagePage() {
   const currentDate = new Date();
-  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
-  
-  // Generate years (current year - 5 to current year + 5)
-  const years = Array.from(
-    { length: 11 },
-    (_, i) => currentDate.getFullYear() - 5 + i
-  );
+  const currentMonth = currentDate.toLocaleString('default', { month: 'long' }).toUpperCase();
+  const currentYear = currentDate.getFullYear();
 
   const { data, loading, error } = useQuery(OVER_USAGE_BY_GROUP, {
     variables: {
-      month: months[selectedMonth - 1],
-      year: selectedYear
+      month: currentMonth,
+      year: currentYear
     },
-    fetchPolicy: 'cache-and-network',
-    skip: !selectedMonth || !selectedYear
+    fetchPolicy: 'cache-and-network'
   });
 
   if (loading) return (
@@ -66,7 +53,11 @@ export default function OverUsagePage() {
     employee: `${group.employeeCount} employees`,
     group: group.groupName,
     over: group.totalOverUsage,
-    status: 'Group Summary'
+    firstAt: 'N/A',
+    lastTxn: 'N/A',
+    status: 'Group Summary',
+    allowed: 0, // Not available in the current schema
+    used: 0     // Not available in the current schema
   })) || [];
 
   // Get summary stats
@@ -75,39 +66,12 @@ export default function OverUsagePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Over-Usage Cases</h1>
-          <div className="flex flex-col sm:flex-row gap-4 mt-2">
-            <div className="relative">
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              >
-                {months.map((month, index) => (
-                  <option key={month} value={index + 1}>
-                    {month.charAt(0) + month.slice(1).toLowerCase()}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-500 pointer-events-none" />
-            </div>
-            <div className="relative">
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="appearance-none bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              >
-                {years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-2.5 h-4 w-4 text-gray-500 pointer-events-none" />
-            </div>
-          </div>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">
+            Managing {totalEmployees} employees with over-usage in {currentMonth} {currentYear}
+          </p>
         </div>
         <div className="flex gap-2">
           <button className="px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-sm inline-flex items-center gap-2">

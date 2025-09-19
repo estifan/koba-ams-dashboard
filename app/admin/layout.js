@@ -7,15 +7,15 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 
 const NavItem = ({ icon: Icon, label, isActive, hasChildren, children, onClick }) => {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="space-y-1">
       <div
-        className={`flex items-center justify-between px-4 py-2.5 rounded-lg cursor-pointer transition-colors duration-200 ${
-          isActive ? "bg-white/10 text-white" : "text-white/80 hover:bg-white/5 hover:text-white"
-        }`}
+        className={`flex items-center justify-between px-4 py-2.5 rounded-lg cursor-pointer transition-colors duration-200 ${isActive ? "bg-white/10 text-white" : "text-white/80 hover:bg-white/5 hover:text-white"
+          }`}
         onClick={() => {
           if (hasChildren) setIsOpen(!isOpen);
           if (onClick) onClick();
@@ -47,7 +47,7 @@ export default function AdminLayout({ children }) {
       const userRaw = typeof window !== 'undefined' ? localStorage.getItem('auth_user') : null;
       const parsedUser = userRaw ? JSON.parse(userRaw) : null;
       if (!token || !parsedUser) {
-        router.replace('/loginPage');
+        router.replace('/');
         return;
       }
       if (parsedUser.role !== 'ADMIN') {
@@ -58,7 +58,7 @@ export default function AdminLayout({ children }) {
       setUser(parsedUser);
       setReady(true);
     } catch (e) {
-      router.replace('/loginPage');
+      router.replace('/');
     }
   }, [router]);
 
@@ -68,7 +68,7 @@ export default function AdminLayout({ children }) {
         localStorage.removeItem('auth_token');
         localStorage.removeItem('auth_user');
       }
-    } catch {}
+    } catch { }
     router.replace('/');
   };
 
@@ -76,14 +76,18 @@ export default function AdminLayout({ children }) {
     <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
       {sidebarOpen && <div className="fixed inset-0 z-20 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />}
       <aside
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-gray-900 text-white transform ${
-          sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 transition-transform duration-300 ease-in-out`}
+        className={`fixed inset-y-0 left-0 z-30 w-64 bg-gray-900 text-white transform ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } lg:translate-x-0 transition-transform duration-300 ease-in-out`}
       >
         <div className="flex flex-col h-full">
           <div className="px-6 py-5 border-b border-white/10">
-            <h1 className="text-xl font-bold">Koba Pestry</h1>
-            <p className="text-xs text-white/60 mt-1">Admin Dashboard</p>
+            <div className="flex items-center gap-2">
+              <Image src="/Logo-sm.png" alt="Logo" width={40} height={40} />
+              <div>
+                <h1 className="text-xl font-bold">Koba Pestry</h1>
+                <p className="text-xs text-white/60 mt-1">Admin Dashboard</p>
+              </div>
+            </div>
           </div>
 
           <nav className="flex-1 px-3 py-6 space-y-1.5 overflow-y-auto">
@@ -157,7 +161,7 @@ export default function AdminLayout({ children }) {
                   {(() => {
                     const name = user?.fullName || 'Admin User';
                     const parts = name.trim().split(/\s+/);
-                    const initials = parts.length >= 2 ? `${parts[0][0] || ''}${parts[1][0] || ''}` : (parts[0]?.slice(0,2) || 'AU');
+                    const initials = parts.length >= 2 ? `${parts[0][0] || ''}${parts[1][0] || ''}` : (parts[0]?.slice(0, 2) || 'AU');
                     return initials.toUpperCase();
                   })()}
                 </div>

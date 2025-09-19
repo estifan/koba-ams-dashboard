@@ -5,10 +5,10 @@ import { Plus, Pencil, Trash2, Search, X, Users as UsersIcon } from "lucide-reac
 import { gql } from "@apollo/client";
 import { useQuery, useMutation } from "@apollo/client/react";
 
-// GraphQL: Employee Groups
-const EMPLOYEE_GROUPS = gql`
-  query EmployeeGroups {
-    employeeGroups {
+// GraphQL: Employee Allowance Groups
+const EMPLOYEE_ALLOWANCE_GROUPS = gql`
+  query EmployeeAllowanceGroups {
+    employeeAllowanceGroups {
       id
       name
       monthlyAllowance
@@ -16,9 +16,9 @@ const EMPLOYEE_GROUPS = gql`
   }
 `;
 
-const CREATE_EMPLOYEE_GROUP = gql`
-  mutation CreateEmployeeGroup($name: String!, $monthlyAllowance: Float!) {
-    createEmployeeGroup(name: $name, monthlyAllowance: $monthlyAllowance) {
+const CREATE_EMPLOYEE_ALLOWANCE_GROUP = gql`
+  mutation CreateEmployeeAllowanceGroup($name: String!, $monthlyAllowance: Float!) {
+    createEmployeeAllowanceGroup(name: $name, monthlyAllowance: $monthlyAllowance) {
       id
       name
       monthlyAllowance
@@ -26,9 +26,9 @@ const CREATE_EMPLOYEE_GROUP = gql`
   }
 `;
 
-const UPDATE_EMPLOYEE_GROUP = gql`
-  mutation UpdateEmployeeGroup($updateEmployeeGroupId: ID!, $name: String, $monthlyAllowance: Float) {
-    updateEmployeeGroup(id: $updateEmployeeGroupId, name: $name, monthlyAllowance: $monthlyAllowance) {
+const UPDATE_EMPLOYEE_ALLOWANCE_GROUP = gql`
+  mutation UpdateEmployeeAllowanceGroup($updateEmployeeAllowanceGroupId: ID!, $name: String, $monthlyAllowance: Float) {
+    updateEmployeeAllowanceGroup(id: $updateEmployeeAllowanceGroupId, name: $name, monthlyAllowance: $monthlyAllowance) {
       id
       name
       monthlyAllowance
@@ -36,32 +36,32 @@ const UPDATE_EMPLOYEE_GROUP = gql`
   }
 `;
 
-const DELETE_EMPLOYEE_GROUP = gql`
-  mutation DeleteEmployeeGroup($deleteEmployeeGroupId: ID!) {
-    deleteEmployeeGroup(id: $deleteEmployeeGroupId)
+const DELETE_EMPLOYEE_ALLOWANCE_GROUP = gql`
+  mutation DeleteEmployeeAllowanceGroup($deleteEmployeeAllowanceGroupId: ID!) {
+    deleteEmployeeAllowanceGroup(id: $deleteEmployeeAllowanceGroupId)
   }
 `;
 
-export default function FinanceEmployeeGroupsPage() {
+export default function FinanceEmployeeAllowanceGroupsPage() {
   const [query, setQuery] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null); // { id?, name, monthlyAllowance }
 
-  const { data, loading, error } = useQuery(EMPLOYEE_GROUPS);
-  const [createGroup, { loading: creating }] = useMutation(CREATE_EMPLOYEE_GROUP, {
-    refetchQueries: [{ query: EMPLOYEE_GROUPS }],
+  const { data, loading, error } = useQuery(EMPLOYEE_ALLOWANCE_GROUPS);
+  const [createGroup, { loading: creating }] = useMutation(CREATE_EMPLOYEE_ALLOWANCE_GROUP, {
+    refetchQueries: [{ query: EMPLOYEE_ALLOWANCE_GROUPS }],
     awaitRefetchQueries: true,
   });
-  const [updateGroup, { loading: updating }] = useMutation(UPDATE_EMPLOYEE_GROUP, {
-    refetchQueries: [{ query: EMPLOYEE_GROUPS }],
+  const [updateGroup, { loading: updating }] = useMutation(UPDATE_EMPLOYEE_ALLOWANCE_GROUP, {
+    refetchQueries: [{ query: EMPLOYEE_ALLOWANCE_GROUPS }],
     awaitRefetchQueries: true,
   });
-  const [deleteGroup, { loading: deleting }] = useMutation(DELETE_EMPLOYEE_GROUP, {
-    refetchQueries: [{ query: EMPLOYEE_GROUPS }],
+  const [deleteGroup, { loading: deleting }] = useMutation(DELETE_EMPLOYEE_ALLOWANCE_GROUP, {
+    refetchQueries: [{ query: EMPLOYEE_ALLOWANCE_GROUPS }],
     awaitRefetchQueries: true,
   });
 
-  const groups = data?.employeeGroups || [];
+  const groups = data?.employeeAllowanceGroups || [];
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return groups;
@@ -83,9 +83,9 @@ export default function FinanceEmployeeGroupsPage() {
 
   async function onDelete(id) {
     if (!id) return;
-    if (!confirm("Delete this employee group?")) return;
+    if (!confirm("Delete this employee allowance group?")) return;
     try {
-      await deleteGroup({ variables: { deleteEmployeeGroupId: String(id) } });
+      await deleteGroup({ variables: { deleteEmployeeAllowanceGroupId: String(id) } });
     } catch (err) {
       console.error(err);
     }
@@ -102,7 +102,7 @@ export default function FinanceEmployeeGroupsPage() {
       if (editing.id == null) {
         await createGroup({ variables: { name, monthlyAllowance } });
       } else {
-        await updateGroup({ variables: { updateEmployeeGroupId: String(editing.id), name, monthlyAllowance } });
+        await updateGroup({ variables: { updateEmployeeAllowanceGroupId: String(editing.id), name, monthlyAllowance } });
       }
       setModalOpen(false);
       setEditing(null);
@@ -116,8 +116,8 @@ export default function FinanceEmployeeGroupsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Employee Groups</h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Finance view to manage employee groups and allowances.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Employee Allowance Groups</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1">Finance view to manage employee allowance groups.</p>
         </div>
         <button onClick={openAdd} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-sm font-medium">
           <Plus size={16} /> New Group
@@ -141,10 +141,10 @@ export default function FinanceEmployeeGroupsPage() {
 
       {/* Loading / Error */}
       {loading && (
-        <div className="text-sm text-gray-600 dark:text-gray-300">Loading groups...</div>
+        <div className="text-sm text-gray-600 dark:text-gray-300">Loading allowance groups...</div>
       )}
       {error && (
-        <div className="text-sm text-red-600 dark:text-red-400">Failed to load employee groups.</div>
+        <div className="text-sm text-red-600 dark:text-red-400">Failed to load employee allowance groups.</div>
       )}
 
       {/* Table */}

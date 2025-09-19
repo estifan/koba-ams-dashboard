@@ -1,7 +1,21 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BarChart3, Calendar, Download, FileText, PieChart, TrendingUp } from "lucide-react";
+import { BarChart3, Calendar, Download, FileText, PieChart, TrendingUp, DollarSign, CreditCard, Users, AlertCircle } from "lucide-react";
+import { gql } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
+
+// GraphQL Queries
+const FINANCE_SUMMARY = gql`
+  query FinanceSummary($month: Month!, $year: Int!) {
+    allowanceSummary(month: $month, year: $year) {
+      totalIssued
+      totalUsed
+      remainingBalance
+      usagePercentage
+    }
+  }
+`;
 
 const PRESETS = [
   { id: "7d", label: "Last 7 days", days: 7 },
@@ -14,6 +28,24 @@ export default function ReportsPage() {
   const [start, setStart] = useState(() => new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
   const [end, setEnd] = useState(today);
   const [preset, setPreset] = useState("7d");
+  const [activeTab, setActiveTab] = useState("overview");
+  
+  // Get current month and year for finance data
+  const currentDate = new Date();
+  const currentMonth = currentDate.toLocaleString('default', { month: 'long' }).toUpperCase();
+  const currentYear = currentDate.getFullYear();
+  
+  // Fetch finance data
+  const { data: financeData, loading: financeLoading } = useQuery(FINANCE_SUMMARY, {
+    variables: {
+      month: currentMonth,
+      year: currentYear
+    },
+    skip: activeTab !== 'finance',
+    onError: (error) => {
+      console.error('Error fetching finance data:', error);
+    }
+  });
 
   const kpis = useMemo(() => {
     // Fake derived KPI values based on date span length
@@ -89,13 +121,92 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-        <KPICard icon={TrendingUp} label="Revenue" value={`$${kpis.revenue.toFixed(2)}`} sub="vs prev period" trend="up" />
-        <KPICard icon={BarChart3} label="Orders" value={kpis.orders} sub="completed" trend="up" />
-        <KPICard icon={FileText} label="Avg Order" value={`$${kpis.avg.toFixed(2)}`} sub="per order" trend="flat" />
-        <KPICard icon={PieChart} label="Refunds" value={kpis.refunds} sub="count" trend="down" />
+      {/* Tabs */}
+      <div className="border-b border-gray-200 dark:border-gray-700">
+        <nav className="-mb-px flex space-x-8">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'overview'
+                ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200'
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('finance')}
+            className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'finance'
+                ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200'
+            }`}
+          >
+            Finance
+          </button>
+        </nav>
       </div>
+
+      {/* Tab Content */}
+      {activeTab === 'overview' ? (
+        <>
+          {/* KPI Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <KPICard icon={TrendingUp} label="Revenue" value={`$${kpis.revenue.toFixed(2)}`} sub="vs prev period" trend="up" />
+            <KPICard icon={BarChart3} label="Orders" value={kpis.orders} sub="completed" trend="up" />
+            <KPICard icon={FileText} label="Avg Order" value={`$${kpis.avg.toFixed(2)}`} sub="per order" trend="flat" />
+            <KPICard icon={PieChart} label="Refunds" value={kpis.refunds} sub="count" trend="down" />
+          </div>
+        </>
+      ) : (
+        <div className="space-y-6">
+          {/* Finance KPI Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <KPICard 
+              icon={DollarSign} 
+              label="Total Allowance" 
+              value={financeData?.allowanceSummary?.totalIssued ? `ETB ${new Intl.NumberFormat('en-US').format(financeData.allowanceSummary.totalIssued)}` : '--'}
+              sub="Issued" 
+              loading={financeLoading}
+            />
+            <KPICard 
+              icon={CreditCard} 
+              label="Allowance Used" 
+              value={financeData?.allowanceSummary?.totalUsed ? `ETB ${new Intl.NumberFormat('en-US').format(financeData.allowanceSummary.totalUsed)}` : '--'}
+              sub={`${financeData?.allowanceSummary?.usagePercentage?.toFixed(1) || '0'}% utilized`}
+              loading={financeLoading}
+            />
+            <KPICard 
+              icon={Users} 
+              label="Remaining Balance" 
+              value={financeData?.allowanceSummary?.remainingBalance ? `ETB ${new Intl.NumberFormat('en-US').format(financeData.allowanceSummary.remainingBalance)}` : '--'}
+              sub={financeData?.allowanceSummary?.remainingBalance > 0 ? 'Available' : 'Overspent'}
+              loading={financeLoading}
+            />
+            <KPICard 
+              icon={AlertCircle} 
+              label="Over Usage" 
+              value={financeData?.allowanceSummary?.usagePercentage ? `${financeData.allowanceSummary.usagePercentage.toFixed(1)}%` : '--'}
+              sub="No over usage"
+              loading={financeLoading}
+            />
+          </div>
+          
+          {/* Placeholder for finance charts */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ChartCard title="Monthly Allowance Usage" description="Trend of allowance usage over time">
+              <div className="h-64 flex items-center justify-center text-gray-400">
+                Allowance usage chart will be displayed here
+              </div>
+            </ChartCard>
+            <ChartCard title="Usage by Category" description="Breakdown of allowance usage">
+              <div className="h-64 flex items-center justify-center text-gray-400">
+                Category breakdown chart will be displayed here
+              </div>
+            </ChartCard>
+          </div>
+        </div>
+      )}
 
       {/* Charts (placeholders) */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
@@ -142,12 +253,43 @@ export default function ReportsPage() {
   );
 }
 
-function KPICard({ icon: Icon, label, value, sub, trend = "flat" }) {
-  const trendInfo = {
-    up: { text: "+4.2%", color: "text-emerald-600", bg: "bg-emerald-50 dark:bg-emerald-900/20" },
-    down: { text: "-1.3%", color: "text-rose-600", bg: "bg-rose-50 dark:bg-rose-900/20" },
-    flat: { text: "0.0%", color: "text-gray-500", bg: "bg-gray-50 dark:bg-gray-700" },
-  }[trend];
+function KPICard({ icon: Icon, label, value, sub, trend = "flat", loading = false }) {
+  const trendColors = {
+    up: "text-green-600 dark:text-green-400",
+    down: "text-red-600 dark:text-red-400",
+    flat: "text-gray-500 dark:text-gray-400",
+  };
+
+  const trendIcons = {
+    up: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+      </svg>
+    ),
+    down: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+      </svg>
+    ),
+    flat: (
+      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+      </svg>
+    ),
+  };
+
+  if (loading) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+        <div className="animate-pulse space-y-3">
+          <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+          <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
       <div className="flex items-center justify-between">
@@ -156,11 +298,11 @@ function KPICard({ icon: Icon, label, value, sub, trend = "flat" }) {
           <p className="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">{value}</p>
           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{sub}</p>
         </div>
-        <div className={`p-3 rounded-lg ${trendInfo.bg}`}>
-          <Icon className={trend === "down" ? "text-rose-600" : "text-emerald-600"} size={20} />
+        <div className={`p-3 rounded-lg ${trendColors[trend]}`}>
+          {trendIcons[trend]}
         </div>
       </div>
-      <div className={`mt-3 text-xs font-medium ${trendInfo.color}`}>{trendInfo.text} vs previous</div>
+      <div className={`mt-3 text-xs font-medium ${trendColors[trend]}`}>{trend === "up" ? "+" : ""}{trend === "down" ? "-" : ""}{trend === "flat" ? "0.0" : ""}% vs previous</div>
     </div>
   );
 }

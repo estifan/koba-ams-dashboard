@@ -132,7 +132,7 @@ export default function ForgotPasswordPage() {
       const { data } = await setNewPass({ variables: { email, newPassword: password, code } });
       if (data?.ForgotPasswordNewPassword) {
         // success -> redirect to login
-        router.replace("/loginPage");
+        router.replace("/");
       } else {
         setError("Unable to reset password.");
       }
@@ -145,7 +145,7 @@ export default function ForgotPasswordPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-4">
       <div className="w-full max-w-md">
         <div className="mb-6 text-center">
-          <Link href="/loginPage" className="inline-flex items-center text-sm text-gray-600 dark:text-gray-300 hover:underline">
+          <Link href="/" className="inline-flex items-center text-sm text-gray-600 dark:text-gray-300 hover:underline">
             <ArrowLeft className="h-4 w-4 mr-1" /> Back to login
           </Link>
         </div>
